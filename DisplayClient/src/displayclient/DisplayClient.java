@@ -20,38 +20,62 @@
 
 package displayclient;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 /**
  *
  * @author alex
  */
 public class DisplayClient extends Application {
-    
+    private final static Logger log = Logger.getLogger(DisplayClient.class.getName());
+    private final static Properties prop = new Properties();
+        
     @Override
     public void start(Stage primaryStage) {
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
-            
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
+        // Hide the Window Decorations
+        primaryStage.initStyle(StageStyle.UNDECORATED);
+        
+        // Work out the size of the screen or area we're allocated
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getBounds();
+
+        if (Integer.parseInt(prop.getProperty("SizeX")) == 0) {
+            //set Stage boundaries to visible bounds of the main screen
+            primaryStage.setX(primaryScreenBounds.getMinX());
+            primaryStage.setY(primaryScreenBounds.getMinY());
+            primaryStage.setWidth(primaryScreenBounds.getWidth());
+            primaryStage.setHeight(primaryScreenBounds.getHeight());
+        }
+        else {
+            // Size the primaryStage to the dimensions we're given
+            primaryStage.setX(Integer.parseInt(prop.getProperty("OffsetX")));
+            primaryStage.setY(Integer.parseInt(prop.getProperty("OffsetY")));
+            primaryStage.setWidth(Integer.parseInt(prop.getProperty("SizeX")));
+            primaryStage.setHeight(Integer.parseInt(prop.getProperty("SizeY")));
+        }
+        
+        log.log( Level.INFO, "Screen Geometry ({0}x{1}) Offset ({2},{3})", new Object[]{primaryStage.getWidth(), primaryStage.getHeight(), primaryStage.getX(), primaryStage.getY()} );
         
         StackPane root = new StackPane();
-        root.getChildren().add(btn);
+        root.getChildren().add(
+                        new ImagePane("/displayclient/assets/splash.jpg", "-fx-background-size: stretch; -fx-background-repeat: no-repeat;")
+        );
         
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, primaryStage.getWidth(), primaryStage.getHeight());
         
-        primaryStage.setTitle("Hello World!");
+        primaryStage.setTitle("Display Client");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -60,6 +84,17 @@ public class DisplayClient extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        try {
+            //load a properties file from class path, inside static method
+            prop.load(DisplayClient.class.getClassLoader().getResourceAsStream("site.properties"));
+        } 
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+        log.addHandler(new ConsoleHandler());
+        log.setLevel(Level.ALL);
+        
         launch(args);
     }
     
