@@ -35,14 +35,23 @@ import javafx.stage.StageStyle;
 
 /**
  *
- * @author alex
+ * @author Alex Harrington - Spring Signage Ltd
  */
 public class DisplayClient extends Application {
     private final static Logger log = Logger.getLogger(DisplayClient.class.getName());
-    private final static Properties prop = new Properties();
+
+    /**
+     * Properties object containing all app configuration
+     */
+    public final static Properties prop = new Properties();
+    
+    public static DownloadManager DownloadManager = new DownloadManager();
+    public static XmdsxmdsBinding XMDS = new XmdsxmdsBinding(prop.getProperty("ServerUri"));
         
     @Override
     public void start(Stage primaryStage) {
+        this.DownloadManager.start();
+        
         // Hide the Window Decorations
         primaryStage.initStyle(StageStyle.UNDECORATED);
         
@@ -92,7 +101,7 @@ public class DisplayClient extends Application {
         
         log.addHandler(new ConsoleHandler());
         log.setLevel(Level.ALL);
-        
+              
         launch(args);
     }
     
