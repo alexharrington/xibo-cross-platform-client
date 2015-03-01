@@ -31,6 +31,8 @@ import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import org.jdom2.DataConversionException;
 
 import org.jdom2.Element;
 
@@ -38,105 +40,44 @@ public class XmdsFileFetcher extends FileFetcher {
 
 	private String type;
 	private String path;
-	private String id;
+	private int id;
 	private int size;
 	private String md5;
 	private DownloadManager parent;
 	private int offset;
 	private int chunk;
+
+    public XmdsFileFetcher(DownloadManager parent, Element n) {
+        super(parent, n);
+    }
 		
-	public XmdsFileFetcher(DownloadManager parent, Element n) {
-		this.parent = parent;
-		this.type = n.getAttributeValue("type");
-		this.path = n.getAttributeValue("path");
-		this.id = n.getAttributeValue("id");
-		if (n.getAttribute("size") != null) {
-			try { this.size = n.getAttribute("size").getIntValue(); } catch (DataConversionException e) {}
-		}
-		this.md5 = n.getAttributeValue("md5");
-		offset = 0;
-		chunk = 512000;
-	}
-	
 	public void run() {
-		DisplayClient.debug.log(10, "FileFetcher: (type=" + type + ") (path=" + path + ") (id=" + id + ") (size=" + size + ") + (md5=" + md5 + ")");
+		log.log(Level.FINER, "FileFetcher: (type={0}) (path={1}) (id={2}) (size={3}) + (md5={4})", new Object[]{type, path, id, size, md5});
 		
-		if (type.equals("media")) {
-			// TODO: Write actual downloading
-			File mediaFile = new File(DisplayClient.config.getString("storage.layouts") +"/" + path);
-			if (! md5FromFile(mediaFile).equals(this.md5)) {
-				// The current file differs from the one being sent
-				// or does not exist already.
-				// Download it.
-				downloadMedia(mediaFile);
-			}
-		}
-		else if (type.equals("layout")) {
-			File layoutFile = new File(DisplayClient.config.getString("storage.layouts") +"/" + path + ".xlf");
-			if (! md5FromFile(layoutFile).equals(this.md5)) {
-				// The current file differs from the one being sent
+            switch (type) {
+                case "media":
+                    // TODO: Write actual downloading
+                    File mediaFile = new File(DisplayClient.prop.getProperty("LibraryPath") +"/" + path);
+                    if (! md5FromFile(mediaFile).equals(this.md5)) {
+                        // The current file differs from the one being sent
+                        // or does not exist already.
+                        // Download it.
+                        downloadMedia(mediaFile);
+                    }
+                    break;
+                case "layout":
+                    File layoutFile = new File(DisplayClient.prop.getProperty("LibraryPath") +"/" + path + ".xlf");
+                    if (! md5FromFile(layoutFile).equals(this.md5)) {
+                        // The current file differs from the one being sent
 				// or does not exist already.
 				// Download it.
 				downloadXLF(layoutFile);
 			}
-		}
-		else if (type.equals("blacklist")) {
-			// TODO: Write actual downloading
-		}
+                    break;
+                case "blacklist":
+                    break;
+            }
 		parent.threadCompleteNotify(this);
-	}
-
-	public String md5FromFile(File f) {
-		String output = "";
-		InputStream is;
-		
-		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			is = new FileInputStream(f);
-			byte[] buffer = new byte[8192];
-			int read = 0;
-			
-			while ((read = is.read(buffer)) > 0) {
-				digest.update(buffer, 0, read);	
-			}
-			byte[] md5sum = digest.digest();
-			BigInteger bigInt = new BigInteger(1, md5sum);
-			output = bigInt.toString(16);
-			is.close();
-		} 
-		catch (NoSuchAlgorithmException e) {
-			// Unable to compute an MD5. If this is the case, I
-			// suspect that's the least of our worries.
-			e.printStackTrace();
-		}
-		catch (FileNotFoundException e) {
-			// File Disappeared from under us. Pretend that the MD5 didn't match
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return output;
-	}
-
-	public String md5FromString(String s) {
-		String output = "";
-				
-		try {
-			MessageDigest digest = MessageDigest.getInstance("MD5");
-			digest.update(s.getBytes(), 0, s.length());	
-			byte[] md5sum = digest.digest();
-			BigInteger bigInt = new BigInteger(1, md5sum);
-			output = bigInt.toString(16);
-		} 
-		catch (NoSuchAlgorithmException e) {
-			// Unable to compute an MD5. If this is the case, I
-			// suspect that's the least of our worries.
-			e.printStackTrace();
-		}
-
-		return output;
 	}
 	
 	public void downloadMedia(File f) {
@@ -165,7 +106,7 @@ public class XmdsFileFetcher extends FileFetcher {
 					this.chunk = this.size - this.offset;
 				}
 				try {
-					response = DisplayManager.xmds.getFile(DisplayClient.config.getString("webservice.serverKey"), DisplayManager.getHardwareKey(), this.path, this.type, this.offset, this.chunk, "" + DisplayClient.XMDSSchemaVersion);
+					response = DisplayClient.XMDS.GetFile(DisplayClient.prop.getProperty("ServerKey"), DisplayClient.prop.getProperty("HardwareKey"), (Double) this.path, this.type, (Double) this.offset, (Double) this.chunk);
 					out.write(response);
 					out.flush();
 					this.offset = this.offset + this.chunk;

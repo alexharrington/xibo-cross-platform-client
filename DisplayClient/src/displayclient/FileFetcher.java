@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Logger;
 
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
@@ -45,6 +46,7 @@ public class FileFetcher extends Thread {
 	private DownloadManager parent;
 	private int offset;
 	private int chunk;
+        protected final static Logger log = Logger.getLogger(DisplayClient.class.getName());
 		
 	public FileFetcher(DownloadManager parent, Element n) {
 		this.parent = parent;

@@ -96,7 +96,7 @@ public class DownloadManager extends Thread {
 					while (iter.hasNext()) {
 						Element n = (Element) iter.next();
 						if (n.getName().equals("file")) {
-							FileFetcher f = new FileFetcher(this, n);
+							FileFetcher f = new XmdsFileFetcher(this, n);
 							
 							Boolean skip = false;
 							
@@ -106,7 +106,7 @@ public class DownloadManager extends Thread {
 								try {
 									if (f.getID().equalsIgnoreCase(tmp.getID())) {
 										skip = true;
-										log.log(Level.FINEST,  "DownloadManager: FileFetcher " + f.getID() + " is still running from previous collection. Skipping.");
+										log.log(Level.FINEST, "DownloadManager: FileFetcher {0} is still running from previous collection. Skipping.", f.getID());
 									}
 								}
 								catch (NullPointerException e) {
@@ -127,7 +127,7 @@ public class DownloadManager extends Thread {
 							// Thread throttling
 							// Sleep until there is a spare space for a new thread.
 							try {
-								log.log(Level.FINE,  "DownloadManager: " + this.numThreadsLimit + " downloads in progress. Sleeping.");
+								log.log(Level.FINE, "DownloadManager: {0} downloads in progress. Sleeping.", this.numThreadsLimit);
 								sleep(5000);
 							} catch (InterruptedException e) {
 							}							
