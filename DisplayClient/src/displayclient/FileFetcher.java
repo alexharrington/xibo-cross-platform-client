@@ -23,12 +23,9 @@ package displayclient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
@@ -38,27 +35,27 @@ import org.jdom2.Element;
 
 public class FileFetcher extends Thread {
 
-	private String type;
-	private String path;
-	private String id;
-	private int size;
-	private String md5;
-	private DownloadManager parent;
-	private int offset;
-	private int chunk;
+	protected String type;
+	protected String path;
+	protected int id;
+	protected int size;
+	protected String md5;
+	protected DownloadManager parent;
+	protected Double offset;
+	protected Double chunk;
         protected final static Logger log = Logger.getLogger(DisplayClient.class.getName());
 		
 	public FileFetcher(DownloadManager parent, Element n) {
 		this.parent = parent;
 		this.type = n.getAttributeValue("type");
 		this.path = n.getAttributeValue("path");
-		this.id = n.getAttributeValue("id");
+                try { this.id = n.getAttribute("id").getIntValue(); } catch (DataConversionException e) {}
 		if (n.getAttribute("size") != null) {
 			try { this.size = n.getAttribute("size").getIntValue(); } catch (DataConversionException e) {}
 		}
 		this.md5 = n.getAttributeValue("md5");
-		offset = 0;
-		chunk = 512000;
+		offset = 0.0;
+		chunk = 512000.0;
 	}
 	
         @Override
@@ -83,13 +80,16 @@ public class FileFetcher extends Thread {
 			BigInteger bigInt = new BigInteger(1, md5sum);
 			output = bigInt.toString(16);
 			is.close();
-		} 
+		}
+                catch (FileNotFoundException e) {
+                    // The file didn't exist so return ""
+                }
 		catch (NoSuchAlgorithmException | IOException e) {
 			// Unable to compute an MD5. If this is the case, I
 			// suspect that's the least of our worries.
 			e.printStackTrace();
 		}
-
+                
 		return output;
 	}
 
@@ -118,7 +118,7 @@ public class FileFetcher extends Thread {
 	public void downloadXLF(File f) {
 	}
 
-	public String getID() {
+	public int getID() {
 		return this.id;
 	}
 

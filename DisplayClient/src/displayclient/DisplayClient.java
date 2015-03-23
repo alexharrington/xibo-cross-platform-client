@@ -45,12 +45,14 @@ public class DisplayClient extends Application {
      */
     public final static Properties prop = new Properties();
     
-    public static DownloadManager DownloadManager = new DownloadManager();
-    public static XmdsxmdsBinding XMDS = new XmdsxmdsBinding(prop.getProperty("ServerUri"));
+    public DownloadManager DM;
+    public XmdsxmdsBinding XMDS;
         
     @Override
     public void start(Stage primaryStage) {
-        this.DownloadManager.start();
+        this.XMDS = new XmdsxmdsBinding(prop.getProperty("ServerUri") + "/xmds.php%3Fv=4");
+        this.DM = new DownloadManager(this);
+        this.DM.start();
         
         // Hide the Window Decorations
         primaryStage.initStyle(StageStyle.UNDECORATED);
